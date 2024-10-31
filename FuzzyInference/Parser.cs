@@ -1,20 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
+﻿///////////////////////////////////////////////
+//Индивидуальная практическая работа 1 по дисциплине ЛОИС
+//Выполнена студентом группы 221701 БГУИР Дичковским Владимиром Андреевичем
+//содержит парсер исходного файла.
+//В парсере есть функция, которая последовательно обрабатывает каждую строку.
+//В нём есть функция для анализа предиката и анализ правила
+//10.10.2024
+//Использованные материалы:
+//Голенков, В. В. Логические основы интеллектуальных систем.
+//Практикум: учебное методическое пособие БГУИР, 2011.
+
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace FuzzyInference
 {
     public static class Parser
     {
-        static KnowledgeBase knowledgeBase;
-
-       private static List<Predicate> predicates = new List<Predicate>();
-
-        // Перечисление для состояний парсера
+        private static List<Predicate> predicates;
         private enum ParserState
         {
             ExpectOpenBracket,
@@ -30,6 +31,7 @@ namespace FuzzyInference
         public static (List<Predicate>, List<Rule>) ParseFile(string fileName)
         {
             List<Rule> rules = new List<Rule>();
+            predicates = new List<Predicate>();
 
             string[] lines = File.ReadAllLines(fileName);
             bool parsingRules = false;
@@ -37,20 +39,13 @@ namespace FuzzyInference
             foreach (string line in lines)
             {
                 if (string.IsNullOrWhiteSpace(line))
-                {
                     parsingRules = true;
-                    continue;
-                }
-                if (!parsingRules)
-                {
-                    Predicate predicate = ParsePredicate(line);
-                    predicates.Add(predicate);
-                }
+                else if (!parsingRules)
+                    predicates.Add(ParsePredicate(line));
                 else
                 {
                     Rule rule = ParseRule(line);
-                    if (rule!=null)
-                        rules.Add(rule);
+                    rules.Add(rule);
                 }
             }
 
@@ -64,11 +59,6 @@ namespace FuzzyInference
             int i = 0;
             int n = line.Length;
 
-            void Error(string expected, char found)
-            {
-                throw new ArgumentException($"Ошибка: ожидалось {expected}, но найден '{found}' на позиции {i}");
-            }
-
             string PredicateName = "";
             if (i < n && char.IsUpper(line[i]))
             {
@@ -77,43 +67,21 @@ namespace FuzzyInference
 
                 // Читаем все последующие цифры в имени предиката
                 while (i < n && char.IsDigit(line[i]))
-                {
-                    PredicateName += line[i];
-                    i++;
-                }
+                    PredicateName += line[i++];
 
                 if (predicates.Any(p => p.Name == PredicateName))
-                {
                     throw new ArgumentException($"Ошибка: Предикат с именем {PredicateName} уже существует");
-                }
             }
             else
-            {
-                Error("Имя предиката (одна заглавная буква и цифры)", i < n ? line[i] : '\0');
-            }
+                ThrowParsingError(nameof(ParsePredicate), line, i, "Имя предиката (одна заглавная буква и цифры)", line[i]);
 
-            // Проверяем, что следующий символ '='
-            if (i < n && line[i] == '=')
-            {
-                i++;
-            }
-            else
-            {
-                Error("символ '='", line[i]);
-            }
+            // Используем метод Expect для проверки символа '='
+            Expect('=', ref i, line, nameof(ParsePredicate));
 
-            // Ожидаем начало элемента: '{'
-            if (i < n && line[i] == '{')
-            {
-                i++;
-            }
-            else
-            {
-                Error("символ '{'", line[i]);
-            }
+            // Используем метод Expect для проверки символа '{'
+            Expect('{', ref i, line, nameof(ParsePredicate));
 
-            ParserState state = ParserState.ExpectOpenBracket; // Начальное состояние парсера
-
+            ParserState state = ParserState.ExpectOpenBracket;
             char letter = '0';
             int previousNumber = 0;
             string varNumber = "";
@@ -126,51 +94,34 @@ namespace FuzzyInference
                 switch (state)
                 {
                     case ParserState.ExpectOpenBracket:
-                        if (currentChar == '<')
-                        {
-                            state = ParserState.ParseVarName;
-                        }
-                        else
-                        {
-                            Error("символ '<'", currentChar);
-                        }
+                        Expect('<',ref i, line, nameof(ParsePredicate));
+                        i--;
+                        state = ParserState.ParseVarName;
                         break;
 
                     case ParserState.ParseVarName:
                         if (char.IsLower(currentChar))
                         {
                             if (letter == '0')
-                            {
                                 letter = currentChar;
-                            }
                             else if (currentChar != letter)
-                            {
-                                Error($"латинская буква {letter}", currentChar);
-                            }
+                                ThrowParsingError(nameof(ParsePredicate), line, i, $"латинская буква {letter}", currentChar);
                             varName = currentChar.ToString();
                             state = ParserState.ParseVarNumber;
                         }
                         else
-                        {
-                            Error("строчная латинская буква", currentChar);
-                        }
+                            ThrowParsingError(nameof(ParsePredicate), line, i, "строчная латинская буква", currentChar);
                         break;
 
                     case ParserState.ParseVarNumber:
                         if (char.IsDigit(currentChar))
-                        {
                             varNumber += currentChar;
-                        }
                         else if (currentChar == ',')
                         {
                             if (varNumber == "")
-                            {
                                 throw new ArgumentException($"Ошибка: Имя переменной не содержит цифр на позиции {i}");
-                            }
                             else if (int.Parse(varNumber) != previousNumber + 1)
-                            {
                                 throw new ArgumentException($"Ошибка: Номера переменных не идут по порядку на позиции {i}");
-                            }
                             else
                             {
                                 previousNumber = int.Parse(varNumber);
@@ -180,9 +131,7 @@ namespace FuzzyInference
                             }
                         }
                         else
-                        {
-                            Error("цифра или запятая", currentChar);
-                        }
+                            ThrowParsingError(nameof(ParsePredicate), line, i, "цифра или запятая", currentChar);
                         break;
 
                     case ParserState.ParseFirstNumber:
@@ -192,28 +141,19 @@ namespace FuzzyInference
                             state = ParserState.Drop;
                         }
                         else
-                        {
-                            Error("цифра (0 или 1)", currentChar);
-                        }
+                            ThrowParsingError(nameof(ParsePredicate), line, i, "цифра (0 или 1)", currentChar);
                         break;
 
                     case ParserState.Drop:
-                        if (currentChar == '.')
-                        {
-                            numStr += currentChar;
-                            state = ParserState.ParseNumber;
-                        }
-                        else
-                        {
-                            Error("символ '.'", currentChar);
-                        }
+                        Expect('.', ref i, line, nameof(ParsePredicate));
+                        numStr += ".";
+                        i--;
+                        state = ParserState.ParseNumber;
                         break;
 
                     case ParserState.ParseNumber:
                         if (char.IsDigit(currentChar))
-                        {
                             numStr += currentChar;
-                        }
                         else if (currentChar == '>')
                         {
                             if (numStr != "")
@@ -228,101 +168,69 @@ namespace FuzzyInference
                                 }
                                 catch (FormatException)
                                 {
-                                    throw new ArgumentException($"Ошибка: невозможно преобразовать '{numStr}' в число на позиции {i}");
+                                    ThrowParsingError(nameof(ParsePredicate), line, i, "число", currentChar);
                                 }
                             }
                             else
-                            {
-                                Error("числовое значение", currentChar);
-                            }
-                        }
-                        break;
-
-                    case ParserState.ExpectCloseBracket:
-                        if (currentChar == '>')
-                        {
-                            state = ParserState.ExpectComma;
-                        }
-                        else
-                        {
-                            Error("символ '>'", currentChar);
+                                ThrowParsingError(nameof(ParsePredicate), line, i, "числовое значение", currentChar);
                         }
                         break;
 
                     case ParserState.ExpectComma:
-                        if (currentChar == ',')
-                        {
-                            state = ParserState.ExpectOpenBracket;
-                        }
-                        else
-                        {
-                            Error("символ ','", currentChar);
-                        }
+                        Expect(',', ref i, line, nameof(ParsePredicate));
+                        i--;
+                        state = ParserState.ExpectOpenBracket;
                         break;
                 }
                 i++;
             }
 
-            // Проверяем, что строка заканчивается на '}'
-            if (line[i] != '}')
-            {
-                Error("символ '}'", line[i]);
-            }
+            Expect('}', ref i, line, nameof(ParsePredicate));
 
-            return new Predicate(PredicateName, letter, elements.ToArray()); // Возвращаем элементы для использования, если это необходимо
+            return new Predicate(PredicateName, letter, elements.ToArray());
         }
-
-
         private static Rule ParseRule(string line)
         {
             line = line.Replace(" ", "");
             int i = 0, n = line.Length;
             Predicate Antecedent, Consequent;
-
             Predicate ParsePredicate(ref int index)
             {
                 string predicateName = "";
-
                 if (index < n && char.IsUpper(line[index]))
                 {
                     predicateName += line[index++];
                     while (index < n && char.IsDigit(line[index]))
-                    {
                         predicateName += line[index++];
-                    }
-
                     Predicate result = predicates.Find(p => p.Name == predicateName);
                     if (result == null)
-                        throw new ArgumentException($"Ошибка: Предикат с именем {predicateName} не описан");
-
-                    // Проверка структуры (VariableName)
-                    Expect('(', ref index);
-                    Expect(result.VariableName, ref index);
-                    Expect(')', ref index);
+                        throw new ArgumentException($"Предикат с именем {predicateName} не описан");
+                    Expect('(', ref index, line, nameof(ParseRule));
+                    Expect(result.VariableName, ref index, line, nameof(ParseRule));
+                    Expect(')', ref index, line, nameof(ParseRule));
 
                     return result;
                 }
                 throw new ArgumentException("Ошибка: ожидалось имя предиката");
             }
-
-            void Expect(char expected, ref int index)
-            {
-                if (index >= n || line[index] != expected)
-                    throw new ArgumentException($"Ошибка: ожидался символ '{expected}'");
-                index++;
-            }
-
-            // Парсинг антецедента
+            
             Antecedent = ParsePredicate(ref i);
-            Expect('~', ref i);
-            Expect('>', ref i);
-
-            // Парсинг консеквента
+            Expect('~', ref i, line, nameof(ParseRule));
+            Expect('>', ref i, line, nameof(ParseRule));
             Consequent = ParsePredicate(ref i);
-
-            if (Antecedent.Cardinality == Consequent.Cardinality) return null;
             return new Rule(Antecedent, Consequent);
         }
 
+      
+        private static void Expect(char expected, ref int index, string line, string methodName)
+        {
+            if (index >= line.Length || line[index] != expected)
+                ThrowParsingError(methodName, line, index, $"символ '{expected}'", line[index]);
+            index++;
+        }
+        private static void ThrowParsingError(string methodName, string line, int index, string expected, char found)
+        {
+            throw new ArgumentException($"Ошибка в {methodName}: ожидалось {expected}, но найден '{found}' на позиции {index} в строке '{line}'");
+        }
     }
 }

@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1" GroupingSetting="Alphabetical">
   <Class Name="FuzzyInference.Predicate">
-    <Position X="3.5" Y="3" Width="1.5" />
+    <Position X="7.75" Y="6.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAEAAEAAARAAAAAAAIAAAEAAAAAAAA=</HashCode>
       <FileName>Predicate.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="FuzzyInference.Rule">
-    <Position X="0.5" Y="4.25" Width="1.5" />
+    <Position X="10.75" Y="7.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAQEIAAAAAgAAAAAAAAAAAAAAAAAAAY=</HashCode>
       <FileName>Rule.cs</FileName>
@@ -19,9 +19,9 @@
     </ShowAsAssociation>
   </Class>
   <Class Name="FuzzyInference.KnowledgeBase">
-    <Position X="6.5" Y="3.25" Width="1.75" />
+    <Position X="4.5" Y="6.25" Width="2.25" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAEAAAAAACAAAAAAAQAAAgAAAAAABA=</HashCode>
+      <HashCode>EAAAAAAAAAAAAAAEAAAAAACAAAAAAAQAAAgAAAAAABA=</HashCode>
       <FileName>KnowledgeBase.cs</FileName>
     </TypeIdentifier>
     <ShowAsCollectionAssociation>
@@ -29,7 +29,7 @@
     </ShowAsCollectionAssociation>
   </Class>
   <Class Name="FuzzyInference.Inference">
-    <Position X="6.5" Y="0.5" Width="1.5" />
+    <Position X="1.75" Y="6.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAiAAAAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Inference.cs</FileName>
@@ -39,14 +39,9 @@
     </ShowAsAssociation>
   </Class>
   <Class Name="FuzzyInference.InferredPredicate">
-    <Position X="3.5" Y="6.25" Width="1.5" />
-    <AssociationLine Name="SourcePredicate" Type="FuzzyInference.Predicate">
-      <MemberNameLabel ManuallyPlaced="true" ManuallySized="true">
-        <Position X="0.46" Y="0.168" Height="0.182" Width="1.22" />
-      </MemberNameLabel>
-    </AssociationLine>
+    <Position X="7.75" Y="9.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAIEAAAAAAAAAAAAAAAAAAAAAACAAAg=</HashCode>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAACAAAg=</HashCode>
       <FileName>InferedPredicate.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
@@ -55,7 +50,7 @@
     </ShowAsAssociation>
   </Class>
   <Class Name="FuzzyInference.Parser">
-    <Position X="9.5" Y="2" Width="1.5" />
+    <Position X="4.25" Y="0.5" Width="1.5" />
     <Compartments>
       <Compartment Name="Nested Types" Collapsed="false" />
     </Compartments>
@@ -67,12 +62,9 @@
       </Enum>
     </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AAAAAAAACAAAAACAABAhAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAACABAAAAIABAhAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Parser.cs</FileName>
     </TypeIdentifier>
-    <ShowAsAssociation>
-      <Field Name="knowledgeBase" />
-    </ShowAsAssociation>
   </Class>
   <Font Name="Segoe UI" Size="9" />
 </ClassDiagram>

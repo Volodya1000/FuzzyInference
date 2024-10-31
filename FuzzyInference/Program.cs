@@ -1,33 +1,52 @@
-﻿namespace FuzzyInference
+﻿///////////////////////////////////////////////
+//Индивидуальная практическая работа 1 по дисциплине ЛОИС
+//Выполнена студентом группы 221701 БГУИР Дичковским Владимиром Андреевичем 
+//класс Program содержит входную точку программ
+// в нём происходит чтение исходного файла и запись файла после выполнения прямого нечеткого вывода.
+//Исходные файлы располагаются в папке Input проекта, а записываются файлы в папку Output
+//10.10.2024
+//Использованные материалы:
+//Голенков, В. В. Логические основы интеллектуальных систем.
+//Практикум: учебное методическое пособие БГУИР, 2011.
+
+namespace FuzzyInference
 {
     class Program
     {
         static void Main()
         {
+           
             bool repeat = true;
 
             while (repeat)
             {
-                string kbFileName = GetFileNameFromConsole();
-                var (predicates, rules) = Parser.ParseFile(kbFileName);
-                KnowledgeBase knowledgeBase = new KnowledgeBase(predicates, rules);
+                try
+                {
+                    string kbFileName = GetFileNameFromConsole();
+                    var (predicates, rules) = Parser.ParseFile(kbFileName);
+                    KnowledgeBase knowledgeBase = new KnowledgeBase(predicates, rules);
 
-                Inference.knowledgeBase = knowledgeBase;
-                Inference.ProcessInference(knowledgeBase.InitialPredicatesList);
+                    Inference.knowledgeBase = knowledgeBase;
+                    Inference.ProcessInference(knowledgeBase.InitialPredicatesList);
 
-                // Вывод результата в консоль
-                Console.WriteLine(knowledgeBase);
+                    Console.WriteLine(knowledgeBase.GetInferedPredicstesString());
 
-                // Сохранение результата
-                string fullResultFilePath = GetResultFilePath(kbFileName);
-                SaveToFile(fullResultFilePath, knowledgeBase.ToString());
+                    string fullResultFilePath = GetResultFilePath(kbFileName);
+                    SaveToFile(fullResultFilePath, knowledgeBase.ToString());
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Произошла ошибка: {ex.Message}");
+                }
 
-                // Запрос на повторение процесса
+
                 repeat = AskToRepeat();
             }
 
             Console.WriteLine("Программа завершена.");
         }
+
+       
 
         // Метод для получения корректного имени файла через консоль
         static string GetFileNameFromConsole()

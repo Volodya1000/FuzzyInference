@@ -1,4 +1,11 @@
-﻿using System.Runtime.CompilerServices;
+﻿///////////////////////////////////////////////
+//Индивидуальная практическая работа 1 по дисциплине ЛОИС
+//Выполнена студентом группы 221701 БГУИР Дичковским Владимиром Андреевичем
+//Класс Inference содержит алгоритм для прямого нечеткого логического вывода
+//10.10.2024
+//Использованные материалы:
+//Голенков, В. В. Логические основы интеллектуальных систем.
+//Практикум: учебное методическое пособие БГУИР, 2011.
 
 namespace FuzzyInference
 {
@@ -35,29 +42,49 @@ namespace FuzzyInference
                 else return 0;
             }
             List<Predicate> PredicatesInferedOnThisStep = new();
-;           foreach (Rule rule in knowledgeBase.RulesList)
+            foreach (Rule rule in knowledgeBase.RulesList)
             {
-                //Находим все предикаты с мощностью равной мощности посылки
-                foreach (Predicate predicate in knowledgeBase.InitialPredicatesList)
-                {
-                    if (predicate.Cardinality == rule.Antecedent.Cardinality)
+                if (rule.Antecedent.Cardinality == rule.Consequent.Cardinality)
+                    continue;
+                    //Находим все предикаты с мощностью равной мощности посылки
+                 foreach (Predicate predicate in InputPredicates)
+                 {
+                    if (knowledgeBase.InferredPredicatesList.Count >= 50)
+                        return;
+                    if (predicate.Cardinality == rule.Antecedent.Cardinality&& predicate.VariableName== rule.Antecedent.VariableName)
                     {
                         float[,] DractricMatrix = new float[rule.Antecedent.Cardinality, rule.Consequent.Cardinality];
-                        for (int row = 0; row < rule.Antecedent.Cardinality; row++)
-                            for (int column = 0; column < rule.Antecedent.Cardinality; column++)
+                        for (int row = 0; row < DractricMatrix.GetLength(0); row++)
+                            for (int column = 0; column < DractricMatrix.GetLength(1); column++)
                                 DractricMatrix[row, column] = DrasticMultiplication(predicate.ValuesArray[row], rule.ImplicationMatrix[row, column]);
                         float[] NewPredicateValues = GetMaxInColumns(DractricMatrix);
-                        string NewPredicateName = "I"+knowledgeBase.InferredPredicatesList.Count.ToString();
-                        InferredPredicate NewPredicate=new(NewPredicateName, predicate.VariableName, NewPredicateValues, rule, predicate);
-                        if (knowledgeBase.InferredPredicatesList.All(p => !p.AreEqual(NewPredicate)))
+                        var uniquePredicates = knowledgeBase.InferredPredicatesList
+    .Distinct(new PredicateComparer()) // Используем компаратор
+    .ToList(); // Конвертируем в список для получения количества
+
+                        //// Теперь используем количество уникальных предикатов для создания нового имени
+                        string NewPredicateName = "I" + uniquePredicates.Count.ToString();
+
+                        //string NewPredicateName = "I"+knowledgeBase.InferredPredicatesList.Count.ToString();
+                        InferredPredicate NewPredicate=new(NewPredicateName, rule.Consequent.VariableName, NewPredicateValues, rule, predicate);
+                        var existingPredicate = knowledgeBase.InferredPredicatesList
+                         .FirstOrDefault(p => p.AreEqual(NewPredicate));
+                        if (existingPredicate != null)
+                        {
+                            NewPredicateName = existingPredicate.Name;
+                            NewPredicate = new(NewPredicateName, rule.Consequent.VariableName, NewPredicateValues, rule, predicate);
+                            knowledgeBase.AddInferredPredicate(NewPredicate);
+                        }
+                        else
                         {
                             PredicatesInferedOnThisStep.Add(NewPredicate);
                             knowledgeBase.AddInferredPredicate(NewPredicate);
                         }
+                       
                     }
                 }
             }
-            if (PredicatesInferedOnThisStep.Count != 0&& knowledgeBase.InferredPredicatesList.Count<100)
+            if (PredicatesInferedOnThisStep.Count != 0)
                 ProcessInference(PredicatesInferedOnThisStep);
         }
     }
